@@ -1,13 +1,29 @@
 #include "meufiltro.h"
+#include <math.h>
 
-Imagem pintarLadrilho(Imagem tela, Ladrilho l){
+int girarVetor(char tipo,Imagem img, int x, int y, int angulo){
+	int new_angulo = (double) angulo;
+	if(tipo == 'X' || tipo == 'x'){
+		return ceil((cos(new_angulo)*(x-ceil(img.w/2)))+(sin(new_angulo)*(y-ceil(img.h/2)))) + ceil(img.w/2);
+	}else if(tipo == 'Y' || tipo == 'y'){
+		return ceil(((-1)*sin(new_angulo)*(x-ceil(img.w/2)))+(cos(new_angulo)*(y-ceil(img.h/2)))) + ceil(img.w/2);
+	}
+}
+
+Imagem pintarLadrilho(Imagem tela, Ladrilho l, int angulo){
 	//preenchendo o ladrilho com a cor do meio
 	for (int linha = l.i;linha <= (l.i + l.tamanho); ++linha){
 		for (int coluna = l.j; coluna <= (l.j + l.tamanho); ++coluna){
-			if(linha < tela.h && coluna < tela.w){
-				tela.m[linha][coluna][0] = l.cor[0];
-				tela.m[linha][coluna][1] = l.cor[1];
-				tela.m[linha][coluna][2] = l.cor[2];
+			int nlinha = linha, ncoluna = coluna;
+			//if(angulo != 0){
+				nlinha = girarVetor('x', tela, linha, coluna, angulo);
+				ncoluna = girarVetor('y', tela, linha, coluna, angulo);
+			//}
+
+			if((nlinha < tela.h && nlinha >= 0) && (ncoluna < tela.w && ncoluna >= 0)){
+				tela.m[nlinha][ncoluna][0] = l.cor[0];
+				tela.m[nlinha][ncoluna][1] = l.cor[1];
+				tela.m[nlinha][ncoluna][2] = l.cor[2];
 			}
 		}	
 	}
@@ -17,9 +33,12 @@ Imagem pintarLadrilho(Imagem tela, Ladrilho l){
 void inicializarWidgetsMeuFiltro() {
 	//widgets das opcoes de filtro
 	widgetControleNivel = 	gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 1, 100, 3);
+	widgetControleAngulo = 	gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 360, 1);
 	widgetMisturarCanais = gtk_check_button_new_with_label("Misturar canais");
 	widgetOrdemLadrilhos = gtk_check_button_new_with_label("Ordem dos ladrilhos aleatória");
-	label3 = gtk_label_new("Tamanho do ladrilho");;
+	label3 = gtk_label_new("Tamanho do ladrilho");
+	label4 = gtk_label_new("Ângulo de rotação do ladrilho");
+	g_signal_connect(G_OBJECT(widgetControleAngulo), "value-changed", G_CALLBACK(funcaoAplicar), NULL);
 	g_signal_connect(G_OBJECT(widgetControleNivel), "value-changed", G_CALLBACK(funcaoAplicar), NULL);
 }
 
@@ -31,6 +50,8 @@ void adicionarWidgetsMeuFiltro(GtkWidget *container) {
 	gtk_container_add(GTK_CONTAINER(container), vbox);
 	gtk_container_add(GTK_CONTAINER(vbox), label3);
 	gtk_container_add(GTK_CONTAINER(vbox), widgetControleNivel);
+	gtk_container_add(GTK_CONTAINER(vbox), label4);
+	gtk_container_add(GTK_CONTAINER(vbox), widgetControleAngulo);
 	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetMisturarCanais);
 	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetOrdemLadrilhos);
 	gtk_container_add(GTK_CONTAINER(vbox), hbtnbox);
@@ -39,6 +60,7 @@ void adicionarWidgetsMeuFiltro(GtkWidget *container) {
 Imagem meuFiltro(Imagem origem) {
 	int i, j;
 	int nivel = (int) gtk_range_get_value(GTK_RANGE(widgetControleNivel));
+	int angulo = (int) gtk_range_get_value(GTK_RANGE(widgetControleAngulo));
 	int isAleatorio = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgetOrdemLadrilhos));
 	
 	Imagem destino = alocarImagem(origem);
@@ -93,7 +115,7 @@ Imagem meuFiltro(Imagem origem) {
 			ladrilhos[i].j = rand()%(destino.h-1);
 		}
 		
-		pintarLadrilho(destino, ladrilhos[i]);				
+		pintarLadrilho(destino, ladrilhos[i], angulo);				
 	}
 
 	free(ladrilhos);

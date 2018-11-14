@@ -9,9 +9,10 @@
 
 //declare aqui os seus widgets
 GtkWidget *widgetControleNivel;
+GtkWidget *widgetControleAngulo;
 GtkWidget *widgetMisturarCanais;
 GtkWidget *widgetOrdemLadrilhos;
-GtkWidget *label3;
+GtkWidget *label3, *label4;
 
 Imagem meuFiltro(Imagem origem);
 void inicializarWidgetsMeuFiltro();
