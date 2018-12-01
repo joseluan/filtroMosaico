@@ -11,7 +11,11 @@
 GtkWidget *widgetControleNivel;
 GtkWidget *widgetControleAngulo;
 GtkWidget *widgetMisturarCanais;
+GtkWidget *widgetAnguloEscolha;
+GtkWidget *widgetAnguloAleatorio;
+GtkWidget *widgetAnguloGradiente;
 GtkWidget *widgetOrdemLadrilhos;
+GtkWidget *widgetColorChooserDialog;
 GtkWidget *label3, *label4;
 
 Imagem meuFiltro(Imagem origem);

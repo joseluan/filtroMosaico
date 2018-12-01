@@ -6,6 +6,7 @@
 #include "meufiltro.h"
 
 GtkWidget *window, *image;
+GtkWidget *colorDialog;
 GtkWidget *vbox, *hbox;
 GtkWidget *label1, *label2;
 char *nomeArquivo;
@@ -135,7 +136,7 @@ int main(int argc, char **argv) {
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 
 	//altera o tamanho da janela
-	gtk_window_set_default_size(GTK_WINDOW(window), 700, 800);
+	gtk_window_set_default_size(GTK_WINDOW(window), 700, 500);
 
 	//a janela pode ser redimensionada
 	gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
