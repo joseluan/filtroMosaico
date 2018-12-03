@@ -17,6 +17,10 @@ GtkWidget *widgetAnguloGradiente;
 GtkWidget *widgetOrdemLadrilhos;
 GtkWidget *widgetColorChooserDialog;
 GtkWidget *label3, *label4;
+GtkWidget *widgetCorFundo;
+GtkWidget *container_filtro;
+GtkWidget *aba1, *aba2, *aba3;
+GtkWidget *frameDiversos, *frameCorFundo, *frameAngulacao;
 
 Imagem meuFiltro(Imagem origem);
 void inicializarWidgetsMeuFiltro();

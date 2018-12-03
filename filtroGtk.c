@@ -6,9 +6,9 @@
 #include "meufiltro.h"
 
 GtkWidget *window, *image;
-GtkWidget *colorDialog;
 GtkWidget *vbox, *hbox;
 GtkWidget *label1, *label2;
+
 char *nomeArquivo;
 
 void printImagemInfo(Imagem img) {
@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 
 	//altera o tamanho da janela
-	gtk_window_set_default_size(GTK_WINDOW(window), 700, 500);
+	gtk_window_set_default_size(GTK_WINDOW(window), 700, 700);
 
 	//a janela pode ser redimensionada
 	gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
@@ -190,6 +190,7 @@ int main(int argc, char **argv) {
 
 	//adiciona um widget imagem vazio
 	image = gtk_image_new();
+	gtk_image_set_pixel_size(GTK_IMAGE(image), 3);
 
 	//adiciona os demais widgets no container vertical (vbox)
 	//a funcao gtk_box_pack_start eh similar a gtk_container_add

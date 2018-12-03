@@ -2,7 +2,7 @@
 #include <math.h>
 
 int girarVetor(char tipo, Ladrilho l, int x, int y, double angulo){
-	angulo /= 58;
+	angulo /= 90;
 	int meio_tamanho = (int) l.tamanho/2;
 	int dx = l.i + meio_tamanho, dy = l.j + meio_tamanho;
 
@@ -39,38 +39,42 @@ Imagem pintarLadrilho(Imagem tela, Ladrilho l, double angulo){
 	return tela;
 }
 
-Imagem pintarLadrilhoGradiente(Imagem tela, Imagem origem, Ladrilho l){
-	//preenchendo o ladrilho com a cor do meio
+float pegarAnguloGradienteCor(Imagem tela, Imagem origem, Ladrilho l){
 	int meiox_l = l.j + ceil(l.tamanho/2), meioy_l = l.i + ceil(l.tamanho/2);
+	float gradiente_x =  0.0;
+	float gradiente_y = 0.0;
+	
 	if((meioy_l+1 < tela.h && meioy_l-1 >= 0) &&
 	   (meiox_l+1 < tela.w && meiox_l-1 >= 0)){
-		int gradiente_x =  0;
-		int gradiente_y = 0;
-		
-		//gradiente X
-		for (int i = 0; i < 3; ++i){
-			gradiente_x += (int) origem.m[meiox_l+1][meioy_l][i] + origem.m[meiox_l+1][meioy_l+1][i] + origem.m[meiox_l+1][meioy_l-1][i];
-			gradiente_x -= (int) origem.m[meiox_l-1][meioy_l][i] + origem.m[meiox_l-1][meioy_l-1][i] + origem.m[meiox_l-1][meioy_l+1][i];
+		for (int canal = 0; canal < 3; ++canal){
+			gradiente_x += (float) origem.m[meiox_l+1][meioy_l][canal] +
+						  origem.m[meiox_l+1][meioy_l+1][canal] + origem.m[meiox_l+1][meioy_l-1][canal];
+			gradiente_x -= (float) origem.m[meiox_l-1][meioy_l][canal] +
+						  origem.m[meiox_l-1][meioy_l-1][canal] + origem.m[meiox_l-1][meioy_l+1][canal];
+			
+			gradiente_y += (float) origem.m[meiox_l][meioy_l+1][canal] + 
+						  origem.m[meiox_l+1][meioy_l+1][canal] + origem.m[meiox_l-1][meioy_l+1][canal];
+			gradiente_y -= (float) origem.m[meiox_l][meioy_l-1][canal] + 
+						  origem.m[meiox_l-1][meioy_l-1][canal] + origem.m[meiox_l+1][meioy_l-1][canal];
 		}
 
-		gradiente_x = ceil(gradiente_x/3);
-
-		//gradiente Y
-		for (int i = 0; i < 3; ++i){
-			gradiente_y += (int) origem.m[meiox_l][meioy_l+1][i] + origem.m[meiox_l+1][meioy_l+1][i] + origem.m[meiox_l-1][meioy_l+1][i];
-			gradiente_y -= (int) origem.m[meiox_l][meioy_l-1][i] + origem.m[meiox_l-1][meioy_l-1][i] + origem.m[meiox_l+1][meioy_l-1][i];
-		}
-
-		gradiente_y = ceil(gradiente_y/3);
-		
-		double angulo = atan2(gradiente_y*1.0, gradiente_x*1.0);
-		tela = pintarLadrilho(tela, l, angulo);
 	}
+
+	return atan2(gradiente_y/3, gradiente_x/3);
+}
+
+Imagem pintarLadrilhoGradiente(Imagem tela, Imagem origem, Ladrilho l){
+	float angulo = pegarAnguloGradienteCor(tela, origem, l);
+	tela = pintarLadrilho(tela, l, angulo);
 	return tela;
 }
 
 void inicializarWidgetsMeuFiltro() {
 	//widgets das opcoes de filtro
+	container_filtro = gtk_notebook_new();
+	aba1 = gtk_stack_new();
+	aba2 = gtk_stack_new();
+	aba3 = gtk_stack_new();
 	widgetControleNivel = 	gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 1, 100, 1);
 	widgetControleAngulo = 	gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 90, 1);
 	widgetMisturarCanais = gtk_check_button_new_with_label("Misturar canais");
@@ -80,34 +84,61 @@ void inicializarWidgetsMeuFiltro() {
 	widgetAnguloAleatorio = gtk_radio_button_new_with_label(gtk_radio_button_get_group (GTK_RADIO_BUTTON(widgetAnguloEscolha)),
 															"Angulação dos ladrilhos aleatória");
 	widgetOrdemLadrilhos = gtk_check_button_new_with_label("Ordem dos ladrilhos aleatória");
-
+	widgetCorFundo = gtk_color_chooser_widget_new();
 	label3 = gtk_label_new("Tamanho do ladrilho");
 	label4 = gtk_label_new("Ângulo de rotação do ladrilho");
-	
+	frameDiversos = gtk_frame_new("Opções diversas");
+	frameCorFundo = gtk_frame_new("Escolha uma cor");
+
 	g_signal_connect(G_OBJECT(widgetControleAngulo), "value-changed", G_CALLBACK(funcaoAplicar), NULL);
 	g_signal_connect(G_OBJECT(widgetControleNivel), "value-changed", G_CALLBACK(funcaoAplicar), NULL);
 	g_signal_connect(G_OBJECT(widgetAnguloAleatorio), "clicked", G_CALLBACK(funcaoAplicar), NULL);
 	g_signal_connect(G_OBJECT(widgetAnguloEscolha), "clicked", G_CALLBACK(funcaoAplicar), NULL);
 	g_signal_connect(G_OBJECT(widgetAnguloGradiente), "clicked", G_CALLBACK(funcaoAplicar), NULL);
 	g_signal_connect(G_OBJECT(widgetOrdemLadrilhos), "clicked", G_CALLBACK(funcaoAplicar), NULL);
+	g_signal_connect(G_OBJECT(widgetCorFundo), "value-changed", G_CALLBACK(funcaoAplicar), NULL);
+	g_signal_connect(G_OBJECT(widgetCorFundo), "clicked", G_CALLBACK(funcaoAplicar), NULL);
 }
 
 void adicionarWidgetsMeuFiltro(GtkWidget *container) {
 
 	GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 	GtkWidget *hbtnbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-	gtk_container_set_border_width(GTK_CONTAINER(vbox), 20);
-	gtk_container_add(GTK_CONTAINER(container), vbox);
+	GtkWidget *hbtnbox2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+	gtk_container_set_border_width(GTK_CONTAINER(vbox), 10);
+	//gtk_container_add(GTK_CONTAINER(container), vbox);
 	gtk_container_add(GTK_CONTAINER(vbox), label3);
 	gtk_container_add(GTK_CONTAINER(vbox), widgetControleNivel);
 	gtk_container_add(GTK_CONTAINER(vbox), label4);
 	gtk_container_add(GTK_CONTAINER(vbox), widgetControleAngulo);
+
 	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetMisturarCanais);
 	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetOrdemLadrilhos);
-	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetAnguloEscolha);
-	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetAnguloAleatorio);
-	gtk_container_add(GTK_CONTAINER(hbtnbox), widgetAnguloGradiente);
-	gtk_container_add(GTK_CONTAINER(vbox), hbtnbox);
+	//gtk_container_add(GTK_CONTAINER(hbtnbox), widgetCorFundo);
+
+	gtk_container_add(GTK_CONTAINER(hbtnbox2), widgetAnguloEscolha);
+	gtk_container_add(GTK_CONTAINER(hbtnbox2), widgetAnguloAleatorio);
+	gtk_container_add(GTK_CONTAINER(hbtnbox2), widgetAnguloGradiente);
+
+	gtk_container_add(GTK_CONTAINER(frameCorFundo), widgetCorFundo);
+	gtk_container_set_border_width(GTK_CONTAINER(frameCorFundo), 10);
+
+	//gtk_container_add(GTK_CONTAINER(vbox), hbtnbox2);
+	gtk_container_add(GTK_CONTAINER(frameDiversos), hbtnbox);
+	gtk_container_add(GTK_CONTAINER(vbox), frameDiversos);
+	gtk_stack_add_titled(GTK_STACK(aba1), vbox, "aba1", "Níveis/Diversos");
+	gtk_stack_add_titled(GTK_STACK(aba2), hbtnbox2, "aba2", "Tipo de angulação");	
+	gtk_stack_add_titled(GTK_STACK(aba3), frameCorFundo, "aba3", "Cor de fundo");
+
+	gtk_notebook_append_page(GTK_NOTEBOOK(container_filtro) , (aba1), NULL);
+	gtk_notebook_append_page(GTK_NOTEBOOK(container_filtro) , (aba2), NULL);
+	gtk_notebook_append_page(GTK_NOTEBOOK(container_filtro) , (aba3), NULL);
+
+	gtk_notebook_set_tab_label_text(GTK_NOTEBOOK(container_filtro) , (aba1), "Níveis/Diversos");
+	gtk_notebook_set_tab_label_text(GTK_NOTEBOOK(container_filtro) , (aba2), "Tipo de angulação");
+	gtk_notebook_set_tab_label_text(GTK_NOTEBOOK(container_filtro) , (aba3), "Cor de fundo");
+
+	gtk_container_add(GTK_CONTAINER(container), container_filtro);
 }
 
 Imagem meuFiltro(Imagem origem) {
@@ -118,12 +149,23 @@ Imagem meuFiltro(Imagem origem) {
 	int isAnguloAleatorio = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgetAnguloAleatorio));
 	int isAnguloGradiente = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgetAnguloGradiente));
 	int isAnguloEscolha = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgetAnguloEscolha));
+	GdkRGBA color;
+	gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(widgetCorFundo), &color);
+	g_print("color accepted: %g %g %g %g\n", ((float) color.red)*255, ((float) color.green)*255, ((float) color.blue)*255, color.alpha);
+	Imagem destino = alocarImagem(origem);
+
+	//pintando a cor de fundo
+	for (int i = 0; i < destino.h; ++i){
+		for (int j = 0; j < destino.w; ++j){
+			destino.m[i][j][0] = ((float) color.red)*255;
+			destino.m[i][j][1] = ((float) color.green)*255;
+			destino.m[i][j][2] = ((float) color.blue)*255;
+		}
+	}
 	
 	if (angulo == 90){
 		angulo = 0;
 	}
-
-	Imagem destino = alocarImagem(origem);
 
 	int ch1, ch2, ch3;
 
@@ -179,7 +221,7 @@ Imagem meuFiltro(Imagem origem) {
 		}else if(isAnguloGradiente){
 			pintarLadrilhoGradiente(destino, origem, ladrilhos[i]);
 		}else{
-			pintarLadrilho(destino, ladrilhos[i], angulo);				
+			pintarLadrilho(destino, ladrilhos[i], angulo);					
 		}
 	}
 
